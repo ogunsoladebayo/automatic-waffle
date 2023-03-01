@@ -1,9 +1,8 @@
-import { MenuItem } from './entities/menu-item.entity';
+import { MenuItem } from "./entities/menu-item.entity";
 import { Repository } from "typeorm";
 import App from "../../app";
 
 export class MenuItemsService {
-
   private menuItemRepository: Repository<MenuItem>;
 
   constructor(app: App) {
@@ -86,6 +85,35 @@ export class MenuItemsService {
   */
 
   async getMenuItems() {
-    throw new Error('TODO in task 3');
+    try {
+      const menuItems = await this.menuItemRepository.find({});
+      const menuMap = new Map<number, any>();
+      const rootMenuItems: MenuItem[] = [];
+
+      // Map each menu item to its ID
+      for (const menuItem of menuItems) {
+        menuMap.set(menuItem.id, menuItem);
+      }
+
+      // Iterate over all menu items and add each one to its parent's children array
+      for (const menuItem of menuItems) {
+        if (menuItem.parentId) {
+          const parentMenuItem = menuMap.get(menuItem.parentId);
+          if (parentMenuItem) {
+            if (!parentMenuItem.children) {
+              parentMenuItem.children = [];
+            }
+            parentMenuItem.children.push(menuItem);
+          }
+        } else {
+          rootMenuItems.push(menuItem);
+        }
+      }
+
+      return rootMenuItems;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
   }
 }
